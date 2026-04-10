@@ -290,6 +290,36 @@
         }
         .bar-default { background: var(--near-black); opacity: .2; }
         .bar-user { background: var(--golden); }
+
+        /* ── Perks toggle ── */
+        .perks-toggle {
+            display: flex; align-items: center; justify-content: center; gap: .625rem;
+            margin-top: 1.25rem; cursor: pointer; user-select: none;
+        }
+        .perks-toggle input[type="checkbox"] { display: none; }
+        .toggle-track {
+            width: 40px; height: 22px; border-radius: 11px;
+            background: var(--surface-container); position: relative; transition: background .2s; flex-shrink: 0;
+        }
+        .toggle-track::after {
+            content: ""; position: absolute; top: 3px; left: 3px;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,.15); transition: transform .2s;
+        }
+        .perks-toggle input:checked + .toggle-track { background: var(--golden); }
+        .perks-toggle input:checked + .toggle-track::after { transform: translateX(18px); }
+        .perks-toggle-label { font-size: .8125rem; font-weight: 500; color: var(--text-muted); }
+        #total-comp-field { display: none; margin-top: 1.25rem; }
+        #total-comp-field.visible { display: block; }
+
+        /* ── Total comp results ── */
+        .total-comp-result { border-top: 1px solid var(--outline-light); margin-top: 2rem; padding-top: 2rem; }
+        .comp-type-badge {
+            display: inline-block; font-size: .625rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .12em; padding: .25rem .75rem; border-radius: 2rem; margin-bottom: .75rem;
+        }
+        .comp-type-badge.base { background: var(--golden-20); color: var(--near-black); }
+        .comp-type-badge.total { background: var(--near-black); color: var(--white); }
         .user-salary-line {
             position: absolute; top: -4px; width: 2px; height: 16px;
             background: var(--golden); border-radius: 1px; transition: left .8s ease-out;
@@ -369,12 +399,26 @@
 
             <div class="form-field-group">
                 <div class="form-step-number">1</div>
-                <div class="form-step-label">What's your annual gross salary?</div>
-                <div class="form-step-hint">Gross annual salary in EUR, including all components</div>
+                <div class="form-step-label">What's your annual base salary?</div>
+                <div class="form-step-hint">Gross annual base salary in EUR, before perks</div>
                 <div class="input-group" style="max-width: 200px; margin: 0 auto;">
                     <input type="number" class="form-control" id="input-salary" min="0" step="500" placeholder="e.g. 45000" required style="border-right:0;">
                     <div class="input-group-append">
                         <span class="input-group-text" style="background:var(--white);border:1px solid var(--outline-light);border-left:0;font-weight:600;border-radius:0 .5rem .5rem 0;">&euro;</span>
+                    </div>
+                </div>
+                <label class="perks-toggle">
+                    <input type="checkbox" id="has-perks">
+                    <span class="toggle-track"></span>
+                    <span class="perks-toggle-label">I also receive perks (stock, health insurance, food allowance, etc.)</span>
+                </label>
+                <div id="total-comp-field">
+                    <div class="form-step-hint" style="margin-top: .5rem;">Total yearly gross compensation including all perks</div>
+                    <div class="input-group" style="max-width: 200px; margin: 0 auto;">
+                        <input type="number" class="form-control" id="input-total-comp" min="0" step="500" placeholder="e.g. 52000" style="border-right:0;">
+                        <div class="input-group-append">
+                            <span class="input-group-text" style="background:var(--white);border:1px solid var(--outline-light);border-left:0;font-weight:600;border-radius:0 .5rem .5rem 0;">&euro;</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -461,9 +505,10 @@
             <p class="result-context" id="result-context"></p>
         </div>
 
-        <!-- Overall distribution -->
+        <!-- Base salary distribution -->
         <div class="distribution-section results-animate" style="animation-delay: .15s;">
-            <p style="font-size: .8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: .15em; color: var(--text-muted); text-align: center; margin-bottom: .5rem;">Your position among all PMs in Portugal</p>
+            <span class="comp-type-badge base">Base Salary</span>
+            <p style="font-size: .8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: .15em; color: var(--text-muted); text-align: center; margin-bottom: .5rem;">Your base salary position among all PMs in Portugal</p>
             <div class="dist-bar-wrapper">
                 <div class="dist-marker-label" id="dist-marker-label" style="display:none;">You</div>
                 <div class="dist-marker" id="dist-marker"></div>
@@ -476,6 +521,23 @@
                 </div>
             </div>
             <p class="dist-summary" id="dist-summary"></p>
+        </div>
+
+        <!-- Total comp distribution (hidden if no perks) -->
+        <div id="total-comp-results" class="distribution-section total-comp-result results-animate" style="display: none; animation-delay: .25s;">
+            <span class="comp-type-badge total">Total Compensation</span>
+            <p style="font-size: .8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: .15em; color: var(--text-muted); text-align: center; margin-bottom: .5rem;">Your total compensation position among all PMs in Portugal</p>
+            <div class="dist-bar-wrapper">
+                <div class="dist-marker" id="tc-dist-marker"></div>
+                <div class="dist-bar">
+                    <div class="dist-bar-fill" id="tc-dist-bar-fill"></div>
+                </div>
+                <div class="dist-bar-labels">
+                    <span>Lower compensation</span>
+                    <span>Higher compensation</span>
+                </div>
+            </div>
+            <p class="dist-summary" id="tc-dist-summary"></p>
         </div>
 
         <!-- Perception vs Reality -->
@@ -661,7 +723,20 @@
         cityMultipliers: {
             'Lisbon': 1.10, 'Porto': 1.00, 'Braga': 0.90, 'Coimbra': 0.90, 'Remote/Other': 1.05
         },
-        overall: { p10: 20000, p25: 28000, p50: 42000, p75: 62000, p90: 82000 }
+        overall: { p10: 20000, p25: 28000, p50: 42000, p75: 62000, p90: 82000 },
+
+        /* Total compensation data (base + perks: stock, health, food, etc.) */
+        totalComp: {
+            roles: {
+                'APM':         { p10: 18000, p25: 23000, p50: 29000, p75: 35000, p90: 41000 },
+                'PM':          { p10: 28000, p25: 35000, p50: 45000, p75: 56000, p90: 65000 },
+                'Senior PM':   { p10: 40000, p25: 50000, p50: 62000, p75: 78000, p90: 90000 },
+                'Lead PM':     { p10: 50000, p25: 60000, p50: 72000, p75: 90000, p90: 102000 },
+                'Director':    { p10: 58000, p25: 70000, p50: 88000, p75: 110000, p90: 128000 },
+                'VP/Head/CPO': { p10: 68000, p25: 85000, p50: 105000, p75: 138000, p90: 168000 }
+            },
+            overall: { p10: 24000, p25: 34000, p50: 50000, p75: 75000, p90: 100000 }
+        }
     };
 
     var ROLE_ORDER = ['APM', 'PM', 'Senior PM', 'Lead PM', 'Director', 'VP/Head/CPO'];
@@ -703,6 +778,16 @@
         return out;
     }
 
+    /* ── Perks toggle ── */
+    $('#has-perks').on('change', function() {
+        if (this.checked) {
+            $('#total-comp-field').addClass('visible');
+        } else {
+            $('#total-comp-field').removeClass('visible');
+            $('#input-total-comp').val('');
+        }
+    });
+
     /* ── Slider live update ── */
     $('#input-perception').on('input', function() {
         $('#perception-display').text(this.value + '%');
@@ -717,30 +802,47 @@
         var yoe     = $('#input-yoe').val();
         var city    = $('#input-city').val();
         var guess   = parseInt($('#input-perception').val());
+        var hasPerks = $('#has-perks').is(':checked');
+        var totalComp = hasPerks ? parseInt($('#input-total-comp').val()) : null;
 
         if (!salary || !roleRaw || !yoe || !city) return;
+        if (hasPerks && (!totalComp || totalComp < salary)) {
+            alert('Total compensation should be equal to or higher than your base salary.');
+            return;
+        }
 
         var roleKey = SALARY_DATA.roleMap[roleRaw];
         var overallPct = calcPercentile(salary, SALARY_DATA.overall);
         var roleDist   = adjustDist(SALARY_DATA.roles[roleKey], city);
         var rolePct    = calcPercentile(salary, roleDist);
 
+        var tcOverallPct = null;
+        if (totalComp) {
+            tcOverallPct = calcPercentile(totalComp, SALARY_DATA.totalComp.overall);
+        }
+
         displayResults({
             salary: salary,
+            totalComp: totalComp,
             role: roleRaw,
             roleKey: roleKey,
             yoe: yoe,
             city: city,
             guess: guess,
             overallPct: overallPct,
-            rolePct: rolePct
+            rolePct: rolePct,
+            tcOverallPct: tcOverallPct
         });
     });
 
     /* ── Display results ── */
     function displayResults(d) {
         // Salary summary
-        $('#result-salary').text(formatEUR(d.salary) + ' gross / year');
+        var salaryText = formatEUR(d.salary) + ' gross / year';
+        if (d.totalComp) {
+            salaryText = formatEUR(d.salary) + ' base \u00B7 ' + formatEUR(d.totalComp) + ' total';
+        }
+        $('#result-salary').text(salaryText);
         $('#result-context').text(d.role + ' \u00B7 ' + d.yoe + ' years \u00B7 ' + d.city);
 
         // Show sections
@@ -748,18 +850,29 @@
         $results.addClass('visible');
         $('#upsell-section').show();
 
-        // Animate distribution bar after a tick
+        // Animate base salary distribution bar
         setTimeout(function() {
             var pct = Math.max(2, Math.min(98, d.overallPct));
             $('#dist-bar-fill').css('width', pct + '%');
             $('#dist-marker').css('left', pct + '%');
-            $('#dist-marker-label').css('left', pct + '%');
-            $('#dist-marker-label').text('You: ' + pct + '%');
         }, 100);
 
-        $('#dist-summary').html('You earn more than <strong>' + d.overallPct + '%</strong> of Product Managers in Portugal.');
+        $('#dist-summary').html('Your base salary is higher than <strong>' + d.overallPct + '%</strong> of Product Managers in Portugal.');
 
-        // Perception vs reality
+        // Total comp distribution
+        if (d.totalComp && d.tcOverallPct !== null) {
+            $('#total-comp-results').show();
+            setTimeout(function() {
+                var tcPct = Math.max(2, Math.min(98, d.tcOverallPct));
+                $('#tc-dist-bar-fill').css('width', tcPct + '%');
+                $('#tc-dist-marker').css('left', tcPct + '%');
+            }, 300);
+            $('#tc-dist-summary').html('Your total compensation is higher than <strong>' + d.tcOverallPct + '%</strong> of Product Managers in Portugal.');
+        } else {
+            $('#total-comp-results').hide();
+        }
+
+        // Perception vs reality (based on base salary)
         $('#guess-value').text(d.guess + '%');
         $('#reality-value').text(d.overallPct + '%');
 
