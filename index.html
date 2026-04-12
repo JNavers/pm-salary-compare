@@ -320,6 +320,54 @@
         }
         .comp-type-badge.base { background: var(--golden-20); color: var(--near-black); }
         .comp-type-badge.total { background: var(--near-black); color: var(--white); }
+
+        /* ── Survey modal ── */
+        .survey-modal .modal-dialog { max-width: 720px; }
+        .survey-modal .modal-content { border: none; border-radius: 1rem; overflow: hidden; background: var(--white); }
+        .survey-modal .modal-header { border-bottom: none; padding: 1.25rem 1.5rem .5rem; }
+        .survey-modal .modal-header .modal-title { font-size: 1.25rem; font-weight: 700; }
+        .survey-modal .modal-body { padding: 0 1.5rem 1.5rem; max-height: 70vh; overflow-y: auto; }
+        .survey-section-title {
+            font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
+            color: var(--text-muted); margin: 1.75rem 0 1rem; padding-bottom: .5rem;
+            border-bottom: 1px solid var(--outline-light);
+        }
+        .survey-section-title:first-child { margin-top: .5rem; }
+        .survey-field { margin-bottom: 1.25rem; }
+        .survey-field label {
+            display: block; font-size: .875rem; font-weight: 600; color: var(--near-black); margin-bottom: .35rem;
+        }
+        .survey-field label .req { color: #e74c3c; margin-left: 2px; }
+        .survey-field .form-control {
+            border: 1px solid var(--outline-light); border-radius: .5rem;
+            font-family: "Inter", sans-serif; font-weight: 400; font-size: .875rem;
+        }
+        .survey-field .form-control:focus { border-color: var(--golden); box-shadow: 0 0 0 .2rem var(--golden-20); }
+        .survey-field select.form-control { appearance: auto; }
+        .survey-field .hint { font-size: .75rem; color: var(--text-muted); margin-top: .25rem; }
+
+        /* Perks checkboxes grid */
+        .perks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+        @media (max-width: 576px) { .perks-grid { grid-template-columns: 1fr; } }
+        .perks-grid label {
+            display: flex; align-items: center; gap: .5rem; font-size: .8125rem; font-weight: 400;
+            color: var(--near-black); cursor: pointer; padding: .4rem .5rem; border-radius: .375rem;
+            transition: background .15s;
+        }
+        .perks-grid label:hover { background: var(--light-gray); }
+        .perks-grid input[type="checkbox"] { accent-color: var(--golden); width: 16px; height: 16px; flex-shrink: 0; }
+
+        .survey-modal .modal-footer { border-top: none; padding: .75rem 1.5rem 1.25rem; }
+        .survey-submit-btn {
+            width: 100%; background: var(--golden); color: var(--near-black);
+            font-weight: 600; font-size: 1rem; border: none; border-radius: .5rem;
+            padding: .75rem; cursor: pointer; transition: opacity .2s;
+        }
+        .survey-submit-btn:hover { opacity: .88; }
+        .survey-submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+        .survey-success { text-align: center; padding: 3rem 1rem; }
+        .survey-success h3 { font-size: 1.5rem; margin-bottom: .75rem; }
+        .survey-success p { color: var(--text-muted); }
         .user-salary-line {
             position: absolute; top: -4px; width: 2px; height: 16px;
             background: var(--golden); border-radius: 1px; transition: left .8s ease-out;
@@ -410,7 +458,7 @@
                 <label class="perks-toggle">
                     <input type="checkbox" id="has-perks">
                     <span class="toggle-track"></span>
-                    <span class="perks-toggle-label">I also receive perks (stock, health insurance, food allowance, etc.)</span>
+                    <span class="perks-toggle-label">I receive perks (stocks, health insurance, food allowance, etc)</span>
                 </label>
                 <div id="total-comp-field">
                     <div class="form-step-hint" style="margin-top: .5rem;">Total yearly gross compensation including all perks</div>
@@ -468,8 +516,17 @@
                     <option value="Porto">Porto</option>
                     <option value="Braga">Braga</option>
                     <option value="Coimbra">Coimbra</option>
-                    <option value="Remote/Other">Remote / Other</option>
+                    <option value="Aveiro">Aveiro</option>
+                    <option value="Faro">Faro</option>
+                    <option value="Funchal">Funchal</option>
+                    <option value="Guimarães">Guimar&atilde;es</option>
+                    <option value="Leiria">Leiria</option>
+                    <option value="Setúbal">Set&uacute;bal</option>
+                    <option value="Viseu">Viseu</option>
+                    <option value="Évora">&#201;vora</option>
+                    <option value="Other">Other</option>
                 </select>
+                <input type="text" class="form-control" id="input-city-other" placeholder="Type your city" style="display:none;margin-top:.5rem;max-width:280px;margin-left:auto;margin-right:auto;">
             </div>
 
             <hr class="form-divider">
@@ -644,23 +701,201 @@
     </div>
 </footer>
 
-<!-- ════════════ FILLOUT FORM MODAL ════════════ -->
-<div class="modal fade" id="filloutModal" tabindex="-1" aria-labelledby="filloutModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content" style="border: none; border-radius: 1rem; overflow: hidden; background: #FFFBF3;">
-            <div class="modal-header" style="border-bottom: none; padding: .75rem 1rem 0;">
+<!-- ════════════ FULL SURVEY MODAL ════════════ -->
+<div class="modal fade survey-modal" id="filloutModal" tabindex="-1" aria-labelledby="surveyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="surveyModalLabel">Complete the full survey</h5>
                 <button type="button" class="close ml-auto" data-dismiss="modal" aria-label="Close" style="font-size: 1.5rem; opacity: .6;">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body" style="padding: 0 1.5rem 1.5rem; min-height: 500px;">
-                <div id="fillout-loading" class="text-center" style="padding: 4rem 0; color: var(--text-muted);">
-                    <div class="spinner-border" style="color: var(--golden);" role="status">
-                        <span class="sr-only">Loading...</span>
+            <form id="full-survey-form">
+                <div class="modal-body" id="survey-body">
+
+                    <!-- About you -->
+                    <div class="survey-section-title">About you</div>
+
+                    <div class="survey-field">
+                        <label>Email <span class="req">*</span></label>
+                        <input type="email" class="form-control" id="survey-email" required placeholder="your@email.com">
                     </div>
-                    <p style="margin-top: 1rem;">Loading form...</p>
+
+                    <div class="survey-field">
+                        <label>Gender <span class="req">*</span></label>
+                        <select class="form-control" id="survey-gender" required>
+                            <option value="" disabled selected>Select</option>
+                            <option>Female</option>
+                            <option>Male</option>
+                            <option>Non-binary</option>
+                            <option>Rather not say</option>
+                        </select>
+                    </div>
+
+                    <!-- About your company -->
+                    <div class="survey-section-title">About your company</div>
+
+                    <div class="survey-field">
+                        <label>Which company do you work for?</label>
+                        <input type="text" class="form-control" id="survey-company" placeholder="Company name">
+                    </div>
+
+                    <div class="survey-field">
+                        <label>Current Industry</label>
+                        <input type="text" class="form-control" id="survey-industry" placeholder="e.g. SaaS, Fintech, Healthcare...">
+                    </div>
+
+                    <div class="survey-field">
+                        <label>What is the size of your organisation? <span class="req">*</span></label>
+                        <select class="form-control" id="survey-org-size" required>
+                            <option value="" disabled selected>Select</option>
+                            <option>1-10</option>
+                            <option>11-50</option>
+                            <option>51-100</option>
+                            <option>101-500</option>
+                            <option>501-1000</option>
+                            <option>1001-5000</option>
+                            <option>&gt;5000</option>
+                        </select>
+                    </div>
+
+                    <div class="survey-field">
+                        <label>Type of company <span class="req">*</span></label>
+                        <select class="form-control" id="survey-company-type" required>
+                            <option value="" disabled selected>Select</option>
+                            <option>Startup</option>
+                            <option>Scale-up</option>
+                            <option>Corporate / Enterprise</option>
+                            <option>Agency / Consultancy</option>
+                            <option>Non-profit</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="survey-field">
+                        <label>Company's remote policy <span class="req">*</span></label>
+                        <select class="form-control" id="survey-remote-policy" required>
+                            <option value="" disabled selected>Select</option>
+                            <option>Fully remote</option>
+                            <option>Hybrid (optional)</option>
+                            <option>Hybrid (forced)</option>
+                            <option>Office only</option>
+                        </select>
+                    </div>
+
+                    <div class="survey-field">
+                        <label>Where is your company based? <span class="req">*</span></label>
+                        <select class="form-control" id="survey-company-location" required>
+                            <option value="" disabled selected>Select country</option>
+                            <option>Portugal</option>
+                            <option>United States</option>
+                            <option>United Kingdom</option>
+                            <option>Germany</option>
+                            <option>Spain</option>
+                            <option>France</option>
+                            <option>Netherlands</option>
+                            <option>Switzerland</option>
+                            <option>Denmark</option>
+                            <option>Sweden</option>
+                            <option>Norway</option>
+                            <option>Ireland</option>
+                            <option>Italy</option>
+                            <option>Belgium</option>
+                            <option>Austria</option>
+                            <option>Estonia</option>
+                            <option>Brazil</option>
+                            <option>Canada</option>
+                            <option>Australia</option>
+                            <option>India</option>
+                            <option>Israel</option>
+                            <option>United Arab Emirates</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+
+                    <!-- About your experience -->
+                    <div class="survey-section-title">About your experience</div>
+
+                    <div class="survey-field">
+                        <label>What best describes your current employment arrangement in this role? <span class="req">*</span></label>
+                        <select class="form-control" id="survey-employment" required>
+                            <option value="" disabled selected>Select</option>
+                            <option>Full-time employee</option>
+                            <option>Part-time employee</option>
+                            <option>Contractor</option>
+                            <option>Freelancer</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="survey-field">
+                        <label>If any, what perks does your organisation offer?</label>
+                        <div class="perks-grid">
+                            <label><input type="checkbox" name="survey-perks" value="Stock"> Stock / Equity</label>
+                            <label><input type="checkbox" name="survey-perks" value="Health Insurance of Employee"> Health insurance (employee)</label>
+                            <label><input type="checkbox" name="survey-perks" value="Health Insurance for Employee's family"> Health insurance (family)</label>
+                            <label><input type="checkbox" name="survey-perks" value="Life Insurance"> Life insurance</label>
+                            <label><input type="checkbox" name="survey-perks" value="Training Budget"> Training budget</label>
+                            <label><input type="checkbox" name="survey-perks" value="Extra vacation days"> Extra vacation days</label>
+                            <label><input type="checkbox" name="survey-perks" value="Extra parental leave"> Extra parental leave</label>
+                            <label><input type="checkbox" name="survey-perks" value="Employee discounts"> Employee discounts</label>
+                            <label><input type="checkbox" name="survey-perks" value="Reimbursable expenses"> Reimbursable expenses (transport, gym, etc.)</label>
+                            <label><input type="checkbox" name="survey-perks" value="Anual/Variable bonus"> Annual / Variable bonus</label>
+                            <label><input type="checkbox" name="survey-perks" value="Other"> Other</label>
+                        </div>
+                    </div>
+
+                    <!-- Transparency questions -->
+                    <div class="survey-section-title">Transparency questions</div>
+                    <p class="hint" style="margin-top: -.5rem; margin-bottom: 1rem; font-size: .8125rem; color: var(--text-muted);">These questions are optional. We want to understand how you feel about your own compensation at the moment.</p>
+
+                    <div class="survey-field">
+                        <label>Is the company transparent in terms of career path and compensation for PMs?</label>
+                        <select class="form-control" id="survey-transparency">
+                            <option value="" disabled selected>Select</option>
+                            <option>Yes, I know my career path and compensation</option>
+                            <option>It's transparent in some aspects but not all of them</option>
+                            <option>No, it's not transparent</option>
+                            <option>I'm not sure</option>
+                        </select>
+                    </div>
+
+                    <div class="survey-field">
+                        <label>Currently do you feel that your salary is adequate to your experience and skills?</label>
+                        <select class="form-control" id="survey-adequacy">
+                            <option value="" disabled selected>Select</option>
+                            <option>Strongly agree: my salary completely matches my experience and skills</option>
+                            <option>Agree: my salary is somewhat above what feels adequate</option>
+                            <option>Neither agree nor disagree: my salary is roughly adequate</option>
+                            <option>Disagree: my salary is somewhat below what feels adequate</option>
+                            <option>Strongly disagree: my salary is far below what feels adequate</option>
+                        </select>
+                    </div>
+
+                    <div class="survey-field">
+                        <label>Thinking about your most recent salary discussion, were you comfortable negotiating your salary?</label>
+                        <select class="form-control" id="survey-negotiation">
+                            <option value="" disabled selected>Select</option>
+                            <option>Strongly agree: I was very comfortable and actively initiate these conversations</option>
+                            <option>Agree: I was generally comfortable having these conversations</option>
+                            <option>Neither agree nor disagree: I felt neutral or unsure about it</option>
+                            <option>Disagree: I was somewhat uncomfortable discussing compensation</option>
+                            <option>Strongly disagree: I avoided or dreaded these conversations</option>
+                        </select>
+                    </div>
+
                 </div>
-                <iframe id="fillout-iframe" style="width: 100%; height: 500px; border: none; display: none;" allowfullscreen></iframe>
+                <div class="modal-footer">
+                    <button type="submit" class="survey-submit-btn" id="survey-submit-btn">Submit Full Survey</button>
+                </div>
+            </form>
+            <!-- Success state -->
+            <div id="survey-success" class="survey-success" style="display: none;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">&#10003;</div>
+                <h3>Thank you!</h3>
+                <p>Your response has been recorded. You're helping build the most transparent PM compensation database in Portugal.</p>
+                <button type="button" class="btn btn-dark" data-dismiss="modal" style="margin-top: 1.5rem;">Close</button>
             </div>
         </div>
     </div>
@@ -676,24 +911,71 @@
 <script>
 (function() {
 
-    /* ── Fillout modal lazy-load ── */
-    var iframe = document.getElementById('fillout-iframe');
-    var loading = document.getElementById('fillout-loading');
-    var modalLoaded = false;
+    /* ── Google Sheets webhook (replace with your deployed Apps Script URL) ── */
+    var SHEETS_WEBHOOK = 'https://script.google.com/macros/s/AKfycbxW5SPrFA7aT4HKPi-ASoFFjsO4rU9ajps6fUhvezQdQyeAwnrsKWMk02Kg5SamllZ4gg/exec';
 
-    $('#filloutModal').on('show.bs.modal', function() {
-        if (!modalLoaded) {
-            iframe.src = 'https://impostorpm.fillout.com/t/nWExNDpWzkus';
-            iframe.onload = function() {
-                loading.style.display = 'none';
-                iframe.style.display = 'block';
-            };
-            modalLoaded = true;
+    /* ── Generate unique ID for linking compare + survey rows ── */
+    function generateId() {
+        return 'xxxx-xxxx-xxxx'.replace(/x/g, function() {
+            return Math.floor(Math.random() * 16).toString(16);
+        });
+    }
+    var sessionId = generateId();
+    var compareData = {};
+
+    /* ── Submit to Google Sheets ── */
+    function submitToSheets(data) {
+        if (SHEETS_WEBHOOK.indexOf('YOUR_') === 0) {
+            console.log('Sheets webhook not configured. Data:', data);
+            return Promise.resolve();
         }
+        return fetch(SHEETS_WEBHOOK, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+    }
+
+    /* ── Full survey submit ── */
+    $('#full-survey-form').on('submit', function(e) {
+        e.preventDefault();
+        var $btn = $('#survey-submit-btn');
+        $btn.prop('disabled', true).text('Submitting...');
+
+        var perks = [];
+        $('input[name="survey-perks"]:checked').each(function() { perks.push(this.value); });
+
+        var surveyData = {
+            action: 'update',
+            id: sessionId,
+            email: $('#survey-email').val(),
+            gender: $('#survey-gender').val(),
+            company: $('#survey-company').val(),
+            industry: $('#survey-industry').val(),
+            orgSize: $('#survey-org-size').val(),
+            companyType: $('#survey-company-type').val(),
+            remotePolicy: $('#survey-remote-policy').val(),
+            companyLocation: $('#survey-company-location').val(),
+            employment: $('#survey-employment').val(),
+            perks: perks.join(', '),
+            transparency: $('#survey-transparency').val() || '',
+            salaryAdequacy: $('#survey-adequacy').val() || '',
+            negotiationComfort: $('#survey-negotiation').val() || ''
+        };
+
+        submitToSheets(surveyData).then(function() {
+            $('#survey-body').hide();
+            $('.modal-footer').hide();
+            $('#survey-success').show();
+        }).catch(function() {
+            $btn.prop('disabled', false).text('Submit Full Survey');
+            alert('Something went wrong. Please try again.');
+        });
     });
 
-    /* ── Salary data (real — 535 Portugal respondents, outliers excluded) ── */
-    var SALARY_DATA = {
+    /* ── Salary data — fallback (used until live data loads) ── */
+    var SALARY_DATA_FALLBACK = {
         roles: {
             'APM':            { p10: 19590, p25: 25150, p50: 28500, p75: 35000, p90: 38550, n: 80 },
             'PM':             { p10: 28000, p25: 36000, p50: 43350, p75: 52250, p90: 60900, n: 192 },
@@ -701,17 +983,6 @@
             'Lead/Principal': { p10: 45200, p25: 54590, p50: 60000, p75: 70000, p90: 84600, n: 55 },
             'Director+':      { p10: 40230, p25: 60000, p50: 77000, p75: 90000, p90: 105399, n: 32 },
             'VP/Head/CPO':    { p10: 65000, p25: 70000, p50: 152000, p75: 200000, p90: 250000, n: 9 }
-        },
-        roleMap: {
-            'APM': 'APM', 'PM': 'PM', 'Senior PM': 'Senior PM',
-            'Lead PM': 'Lead/Principal', 'Principal PM': 'Lead/Principal',
-            'Director of Product': 'Director+', 'Head of Product': 'Director+',
-            'VP of Product': 'VP/Head/CPO', 'CPO': 'VP/Head/CPO'
-        },
-        roleLabels: {
-            'APM': 'APM', 'PM': 'PM', 'Senior PM': 'Senior PM',
-            'Lead/Principal': 'Lead / Principal', 'Director+': 'Director+',
-            'VP/Head/CPO': 'VP / Head / CPO'
         },
         yoe: {
             '0-2':  { p10: 20640, p25: 25200, p50: 31500, p75: 43000, p90: 56000, n: 153 },
@@ -721,8 +992,6 @@
             '13+':  { p10: 40800, p25: 46500, p50: 70000, p75: 99000, p90: 111600, n: 17 }
         },
         overall: { p10: 25200, p25: 35000, p50: 45800, p75: 60000, p90: 81965, n: 534 },
-
-        /* Total compensation (base + perks: stock, health, food, etc.) */
         totalComp: {
             roles: {
                 'APM':            { p10: 24590, p25: 27925, p50: 30500, p75: 37000, p90: 40251, n: 80 },
@@ -743,9 +1012,47 @@
         }
     };
 
+    /* ── Live data: start with fallback, overwrite when API responds ── */
+    var SALARY_DATA = {
+        roles: $.extend(true, {}, SALARY_DATA_FALLBACK.roles),
+        roleMap: {
+            'APM': 'APM', 'PM': 'PM', 'Senior PM': 'Senior PM',
+            'Lead PM': 'Lead/Principal', 'Principal PM': 'Lead/Principal',
+            'Director of Product': 'Director+', 'Head of Product': 'Director+',
+            'VP of Product': 'VP/Head/CPO', 'CPO': 'VP/Head/CPO'
+        },
+        roleLabels: {
+            'APM': 'APM', 'PM': 'PM', 'Senior PM': 'Senior PM',
+            'Lead/Principal': 'Lead / Principal', 'Director+': 'Director+',
+            'VP/Head/CPO': 'VP / Head / CPO'
+        },
+        yoe: $.extend(true, {}, SALARY_DATA_FALLBACK.yoe),
+        overall: $.extend(true, {}, SALARY_DATA_FALLBACK.overall),
+        totalComp: $.extend(true, {}, SALARY_DATA_FALLBACK.totalComp)
+    };
+
+    /* ── Fetch live percentiles from Google Sheets ── */
+    (function loadLiveData() {
+        fetch(SHEETS_WEBHOOK, { redirect: 'follow' })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data && data.overall && data.overall.n > 0) {
+                    SALARY_DATA.overall = data.overall;
+                    SALARY_DATA.roles = data.roles;
+                    SALARY_DATA.yoe = data.yoe;
+                    if (data.totalComp) {
+                        SALARY_DATA.totalComp = data.totalComp;
+                    }
+                    console.log('Live data loaded: ' + data.totalEntries + ' entries');
+                }
+            })
+            .catch(function() {
+                console.log('Using fallback data');
+            });
+    })();
+
     var ROLE_ORDER = ['APM', 'PM', 'Senior PM', 'Lead/Principal', 'Director+', 'VP/Head/CPO'];
     var YOE_ORDER  = ['0-2', '3-5', '6-8', '9-12', '13+'];
-    var CITY_ORDER = ['Lisbon', 'Porto', 'Braga', 'Coimbra', 'Remote/Other'];
 
     /* ── Utilities ── */
     function formatEUR(n) {
@@ -777,6 +1084,15 @@
 
     /* City data not yet available — all cities use Portugal-wide data */
 
+    /* ── City "Other" toggle ── */
+    $('#input-city').on('change', function() {
+        if (this.value === 'Other') {
+            $('#input-city-other').show().attr('required', true).focus();
+        } else {
+            $('#input-city-other').hide().removeAttr('required').val('');
+        }
+    });
+
     /* ── Perks toggle ── */
     $('#has-perks').on('change', function() {
         if (this.checked) {
@@ -799,7 +1115,7 @@
         var salary  = parseInt($('#input-salary').val());
         var roleRaw = $('#input-role').val();
         var yoe     = $('#input-yoe').val();
-        var city    = $('#input-city').val();
+        var city    = $('#input-city').val() === 'Other' ? ($('#input-city-other').val() || 'Other') : $('#input-city').val();
         var guess   = parseInt($('#input-perception').val());
         var hasPerks = $('#has-perks').is(':checked');
         var totalComp = hasPerks ? parseInt($('#input-total-comp').val()) : null;
@@ -809,6 +1125,28 @@
             alert('Total compensation should be equal to or higher than your base salary.');
             return;
         }
+
+        /* Store for combining with full survey later */
+        compareData = {
+            salary: salary,
+            totalComp: totalComp,
+            role: roleRaw,
+            yoe: yoe,
+            city: city,
+            guess: guess
+        };
+
+        /* Save compare data to Google Sheets immediately */
+        submitToSheets({
+            action: 'create',
+            id: sessionId,
+            baseSalary: salary,
+            totalComp: totalComp || '',
+            role: roleRaw,
+            yoe: yoe,
+            city: city,
+            perceptionGuess: guess
+        });
 
         var roleKey = SALARY_DATA.roleMap[roleRaw];
         var overallPct = calcPercentile(salary, SALARY_DATA.overall);
