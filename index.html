@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Compare Your PM Salary — The Impostor PM</title>
-    <meta name="description" content="See how your Product Manager salary compares to 680+ PMs in Portugal. Enter your details and get instant results.">
+    <meta name="description" content="See how your Product Manager salary compares to 500+ PMs in Portugal. Enter your details and get instant results.">
 
     <!-- Bootstrap 4.6.2 CSS -->
     <link rel="stylesheet"
@@ -436,7 +436,7 @@
     <div class="container" style="max-width: 42rem;">
         <span class="hero-badge">Portugal 2026</span>
         <h1 class="mb-3">How many PMs earn more or less <span class="hero-highlight">than you</span>?</h1>
-        <p class="hero-subtitle">Enter your salary details and instantly see where you stand among 680+ Product Managers in Portugal.</p>
+        <p class="hero-subtitle">Enter your salary details and instantly see where you stand among 500+ Product Managers in Portugal.</p>
     </div>
 </section>
 
@@ -562,8 +562,7 @@
 
         <!-- Base salary distribution -->
         <div class="distribution-section results-animate" style="animation-delay: .15s;">
-            <span class="comp-type-badge base">Base Salary</span>
-            <p style="font-size: .8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: .15em; color: var(--text-muted); text-align: center; margin-bottom: .5rem;">Your base salary position among all PMs in Portugal</p>
+            <p style="font-size: .8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: .15em; color: var(--text-muted); text-align: center; margin-bottom: .5rem;">Your position among all PMs in Portugal</p>
             <div class="dist-bar-wrapper">
                 <div class="dist-marker-label" id="dist-marker-label" style="display:none;">You</div>
                 <div class="dist-marker" id="dist-marker"></div>
@@ -643,9 +642,9 @@
 <section id="upsell-section" class="upsell-section" style="display: none;">
     <div class="container" style="max-width: 36rem;">
         <h2>Want the full picture?</h2>
-        <p>Complete the full compensation survey to unlock detailed insights across 38 countries, industries, company sizes, and seniority levels.</p>
+        <p>Complete the full compensation survey to unlock detailed insights according to industries, company sizes, remote policy, gender, seniority levels, and more.</p>
         <a href="#" class="btn btn-accent" data-toggle="modal" data-target="#filloutModal">Take the Full Survey</a>
-        <p class="upsell-note">680+ PMs have already contributed</p>
+        <p class="upsell-note">500+ PMs have already contributed</p>
     </div>
 </section>
 
@@ -706,7 +705,7 @@
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="surveyModalLabel">Complete the full survey</h5>
+                <h5 class="modal-title" id="surveyModalLabel">Full survey</h5>
                 <button type="button" class="close ml-auto" data-dismiss="modal" aria-label="Close" style="font-size: 1.5rem; opacity: .6;">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -894,7 +893,7 @@
             <div id="survey-success" class="survey-success" style="display: none;">
                 <div style="font-size: 3rem; margin-bottom: 1rem;">&#10003;</div>
                 <h3>Thank you!</h3>
-                <p>Your response has been recorded. You're helping build the most transparent PM compensation database in Portugal.</p>
+                <p>You'll receive the full report soon. You're helping build the most transparent PM compensation database in Portugal.</p>
                 <button type="button" class="btn btn-dark" data-dismiss="modal" style="margin-top: 1.5rem;">Close</button>
             </div>
         </div>
@@ -967,6 +966,7 @@
         submitToSheets(surveyData).then(function() {
             $('#survey-body').hide();
             $('.modal-footer').hide();
+            $('.survey-modal .modal-header .modal-title').hide();
             $('#survey-success').show();
         }).catch(function() {
             $btn.prop('disabled', false).text('Submit Full Survey');
@@ -1149,36 +1149,32 @@
         });
 
         var roleKey = SALARY_DATA.roleMap[roleRaw];
-        var overallPct = calcPercentile(salary, SALARY_DATA.overall);
-        var rolePct    = calcPercentile(salary, SALARY_DATA.roles[roleKey]);
-
-        var tcOverallPct = null;
-        if (totalComp) {
-            tcOverallPct = calcPercentile(totalComp, SALARY_DATA.totalComp.overall);
-        }
+        /* Compare using total comp (base salary = total comp when no perks) */
+        var effectiveComp = totalComp || salary;
+        var overallPct = calcPercentile(effectiveComp, SALARY_DATA.totalComp.overall);
+        var rolePct    = calcPercentile(effectiveComp, SALARY_DATA.totalComp.roles[roleKey]);
 
         displayResults({
             salary: salary,
             totalComp: totalComp,
+            effectiveComp: effectiveComp,
             role: roleRaw,
             roleKey: roleKey,
             yoe: yoe,
             city: city,
             guess: guess,
             overallPct: overallPct,
-            rolePct: rolePct,
-            tcOverallPct: tcOverallPct
+            rolePct: rolePct
         });
     });
 
     /* ── Display results ── */
     function displayResults(d) {
         // Salary summary
-        var salaryText = formatEUR(d.salary) + ' gross / year';
+        $('#result-salary').text(formatEUR(d.effectiveComp) + ' / year');
         if (d.totalComp) {
-            salaryText = formatEUR(d.salary) + ' base \u00B7 ' + formatEUR(d.totalComp) + ' total';
+            $('#result-salary').append(' <span style="font-size:.5em;font-weight:400;color:var(--text-muted);">(perks included)</span>');
         }
-        $('#result-salary').text(salaryText);
         $('#result-context').text(d.role + ' \u00B7 ' + d.yoe + ' years \u00B7 ' + d.city);
 
         // Show sections
@@ -1186,29 +1182,19 @@
         $results.addClass('visible');
         $('#upsell-section').show();
 
-        // Animate base salary distribution bar
+        // Animate distribution bar
         setTimeout(function() {
             var pct = Math.max(2, Math.min(98, d.overallPct));
             $('#dist-bar-fill').css('width', pct + '%');
             $('#dist-marker').css('left', pct + '%');
         }, 100);
 
-        $('#dist-summary').html('Your base salary is higher than <strong>' + d.overallPct + '%</strong> of Product Managers in Portugal.');
+        $('#dist-summary').html('Your total compensation is higher than <strong>' + d.overallPct + '%</strong> of Product Managers in Portugal.');
 
-        // Total comp distribution
-        if (d.totalComp && d.tcOverallPct !== null) {
-            $('#total-comp-results').show();
-            setTimeout(function() {
-                var tcPct = Math.max(2, Math.min(98, d.tcOverallPct));
-                $('#tc-dist-bar-fill').css('width', tcPct + '%');
-                $('#tc-dist-marker').css('left', tcPct + '%');
-            }, 300);
-            $('#tc-dist-summary').html('Your total compensation is higher than <strong>' + d.tcOverallPct + '%</strong> of Product Managers in Portugal.');
-        } else {
-            $('#total-comp-results').hide();
-        }
+        // Hide the separate total comp section (no longer needed)
+        $('#total-comp-results').hide();
 
-        // Perception vs reality (based on base salary)
+        // Perception vs reality
         $('#guess-value').text(d.guess + '%');
         $('#reality-value').text(d.overallPct + '%');
 
@@ -1223,9 +1209,9 @@
         }
         $('#perception-text').text(pText);
 
-        // Breakdowns
-        renderBreakdown('roles', ROLE_ORDER, SALARY_DATA.roles, SALARY_DATA.roleLabels, d.roleKey, d.salary);
-        renderBreakdown('yoe', YOE_ORDER, SALARY_DATA.yoe, null, d.yoe, d.salary);
+        // Breakdowns (using total comp data)
+        renderBreakdown('roles', ROLE_ORDER, SALARY_DATA.totalComp.roles, SALARY_DATA.roleLabels, d.roleKey, d.effectiveComp);
+        renderBreakdown('yoe', YOE_ORDER, SALARY_DATA.totalComp.yoe, null, d.yoe, d.effectiveComp);
         renderSampleSize(d);
 
         // Scroll to results
@@ -1296,11 +1282,11 @@
         var $container = $('#breakdown-sample');
         $container.empty();
 
-        var roleData = SALARY_DATA.roles[d.roleKey];
-        var yoeData = SALARY_DATA.yoe[d.yoe];
+        var roleData = SALARY_DATA.totalComp.roles[d.roleKey];
+        var yoeData = SALARY_DATA.totalComp.yoe[d.yoe];
 
         var items = [
-            { label: 'Total respondents (Portugal)', value: SALARY_DATA.overall.n },
+            { label: 'Total respondents (Portugal)', value: SALARY_DATA.totalComp.overall.n },
             { label: 'Your role (' + (SALARY_DATA.roleLabels[d.roleKey] || d.roleKey) + ')', value: roleData ? roleData.n : 0 },
             { label: 'Your experience (' + d.yoe + ' yrs)', value: yoeData ? yoeData.n : 0 }
         ];
@@ -1313,7 +1299,7 @@
                 '<span class="value" style="font-size:.875rem;font-weight:700;color:var(--near-black);">' + items[i].value + '</span>' +
                 '</div>'
             );
-            var pct = Math.round((items[i].value / SALARY_DATA.overall.n) * 100);
+            var pct = Math.round((items[i].value / SALARY_DATA.totalComp.overall.n) * 100);
             var $track = $('<div class="breakdown-bar-track"></div>');
             var $fill = $('<div class="breakdown-bar-fill bar-default" style="opacity:.4;"></div>');
             $track.append($fill);
